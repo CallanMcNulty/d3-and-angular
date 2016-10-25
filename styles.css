@@ -1,0 +1,92 @@
+table {
+  border-collapse: collapse;
+}
+tr:nth-child(even) {
+  background-color: #ddd;
+}
+th, td {
+  border: 1px solid black;
+  padding: 5px;
+}
+#highlighted {
+  background-color: #aaf;
+}
+
+.out-of-range {
+  fill: #ddd;
+  stroke: black;
+}
+.in-range {
+  fill: #aaf;
+}
+
+.value-tooltip {
+  fill: #448;
+}
+.value-tooltip text {
+  fill: white;
+}
+
+.series-line {
+  stroke-width: 3;
+}
+.series-point {
+  stroke-width: 1.5;
+}
+
+
+.series0-line {
+  stroke: red;
+}
+.series0-point {
+  fill: darkred;
+  stroke: red;
+}
+
+.series1-line {
+  stroke: green;
+}
+.series1-point {
+  fill: #002800;
+  stroke: green;
+}
+
+.series2-line {
+  stroke: yellow;
+}
+.series2-point {
+  fill: #cc3;
+  stroke: yellow;
+}
+
+.series3-line {
+  stroke: blue;
+}
+.series3-point {
+  fill: darkblue;
+  stroke: blue;
+}
+
+.series4-line {
+  stroke: magenta;
+}
+.series4-point {
+  fill: darkmagenta;
+  stroke: magenta;
+}
+
+.series5-line {
+  stroke: orange;
+}
+.series5-point {
+  fill: #b70;
+  stroke: orange;
+}
+
+.series6-line {
+  stroke: gray;
+}
+.series6-point {
+  fill: #333;
+  stroke: gray;
+}
