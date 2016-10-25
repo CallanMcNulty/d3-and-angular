@@ -4,6 +4,11 @@ import * as d3Scale from 'd3-scale';
 import * as d3TimeFormat from 'd3-time-format';
 
 export class grapher {
+  exclude: Array<string>;
+  constructor() {
+    this.exclude = [];
+  }
+
   linify(points: Array<any>): Array<Object> {
     points.sort(function(a: any, b: any) {
       if(a[0] < b[0]) {
@@ -21,15 +26,17 @@ export class grapher {
     return lines;
   }
 
-  findMaxMin(data: Array<Array<any>>, isMax: boolean, isX: boolean) {
+  findMaxMin(metaData: any, data: Array<Array<any>>, isMax: boolean, isX: boolean) {
     var soFar = isMax ? -Infinity : Infinity;
     for(var i=0; i<data.length; i++) {
+      var skip = false;
       if(typeof data[i][0] === "object") {
-        var val: any = this.findMaxMin(data[i], isMax, isX);
+        var val: any = this.findMaxMin(metaData[i], data[i], isMax, isX);
       } else {
+        if(this.exclude.indexOf(metaData.name)!==-1) {skip = true;}
         var val = isX ? data[i][0] : data[i][1];
       }
-      if(isMax ? val > soFar : val < soFar) {
+      if((isMax ? val > soFar : val < soFar) && !skip) {
         soFar = val;
       }
     }
@@ -55,25 +62,25 @@ export class grapher {
     return transformedData;
   }
 
-  lineGraph(svg: any, data: any) {
+  lineGraph(svg: any, rawData: any) {
     var metaData: Array<any> = [];
-    for(var i=0; i<data.length; i++) {
-      metaData.push({name:data[i].name, unit:data[i].unit, refMin:data[i].refMin, refMax:data[i].refMax});
+    for(var i=0; i<rawData.length; i++) {
+      metaData.push({name:rawData[i].name, unit:rawData[i].unit, refMin:rawData[i].refMin, refMax:rawData[i].refMax});
     }
-    data = this.transformData(data);
+    var data = this.transformData(rawData);
     var h = svg.style("height");
     var w = svg.style("width");
     h = parseFloat(h);
     w = parseFloat(w);
     var padding = 25;
     var paddingLarge = 85;
-    var minX: any = this.findMaxMin(data, false, true);
-    var maxX: any = this.findMaxMin(data, true, true);
+    var minX: any = this.findMaxMin(metaData, data, false, true);
+    var maxX: any = this.findMaxMin(metaData, data, true, true);
     var xInnerPadding = (maxX - minX)/10;
     maxX += xInnerPadding;
     minX -= xInnerPadding;
-    var minY = Math.min(0,this.findMaxMin(data, false, false));
-    var maxY = Math.max(900,this.findMaxMin(data, true, false));
+    var minY = Math.min(0,this.findMaxMin(metaData, data, false, false));
+    var maxY = Math.max(900,this.findMaxMin(metaData, data, true, false));
     var yInnerPadding = (maxY - minY)/10;
     maxY += yInnerPadding;
     minY -= yInnerPadding;
@@ -87,7 +94,7 @@ export class grapher {
       .range([padding, w-padding])
     var numberOfDays = (maxX - minX) / 86400000 + 1;
     var xAxis = d3Axis.axisBottom(xTimeScale)
-      .tickFormat(d3TimeFormat.timeFormat("%m-%d-%y"));
+      .tickFormat(d3TimeFormat.timeFormat("%m-%d"));
     var horizGuide = svg.append("g")
       .attr("class", "axis")
       .attr("transform", "translate(0,"+(h-paddingLarge)+")");
@@ -114,7 +121,7 @@ export class grapher {
     var legendLineLength = 50;
     var legendPointWidth = 6;
     var labelX = padding+legendPadding;
-    var legend = graph.append("g");
+    var legend = graph.append("g").attr("id", "legend");
     var legendBack = legend.append("rect")
       .attr("x", padding)
       .attr("y", h-paddingLarge+padding)
@@ -129,11 +136,26 @@ export class grapher {
       var dataSetUnit = metaData[i].unit;
       var datasetMin = metaData[i].refMin;
       var datasetMax = metaData[i].refMax;
+      var excluded = this.exclude.indexOf(dataSetName)!==-1;
+      var grapher = this;
       //legend
       var labelText = legend.append("text")
         .attr("x", labelX)
         .attr("y", h-padding)
-        .text(dataSetName+" ("+dataSetUnit+")");
+        .text(dataSetName+" ("+dataSetUnit+")")
+        .attr("text-decoration", excluded ? "line-through" : "none")
+        .on("click", function(){
+          var t = d3.select(this).text();
+          t = t.slice(0, t.indexOf(" ("));
+          var selected = d3.select("[name='"+t+"']");
+          if(grapher.exclude.indexOf(t)===-1) {
+            grapher.exclude.push(t);
+          } else {
+            grapher.exclude.splice(grapher.exclude.indexOf(t), 1);
+          }
+          svg.selectAll("*").remove();
+          grapher.lineGraph(svg, rawData);
+        });
       var textWidth = labelText.node().getComputedTextLength();
       legend.append("line")
         .attr("x1", labelX)
@@ -150,6 +172,7 @@ export class grapher {
       labelX = labelX + textWidth + legendPadding;
 
       //trendlines
+      if(!excluded) {
       var lineData = this.linify(data[i]);
       var pointWidth = 6;
       var tooltipWidth = 60;
@@ -181,22 +204,15 @@ export class grapher {
           .on("mouseover", function(d: any) {
             d3.select("."+d3.select(this.parentNode).attr("name"))
               .attr("id", "highlighted");
-            var tooltip = d3.select(this.parentNode.parentNode)
-              .append("g")
-                .attr("class", "value-tooltip tooltip-unlocked");
             var minTip = d3.select(this.parentNode.parentNode)
               .append("g")
                 .attr("class", "value-tooltip tooltip-unlocked");
             var maxTip = d3.select(this.parentNode.parentNode)
               .append("g")
                 .attr("class", "value-tooltip tooltip-unlocked");
-            tooltip.append("rect")
-              .attr("x", xTimeScale(d[0])-(tooltipWidth/2))
-              .attr("y", yScale(d[1])-(tooltipHeight+tooltipTailHeight))
-              .attr("width", tooltipWidth)
-              .attr("height", tooltipHeight)
-              .attr("rx", tooltipHeight/4)
-              .attr("ry", tooltipHeight/4);
+            var tooltip = d3.select(this.parentNode.parentNode)
+              .append("g")
+                .attr("class", "value-tooltip tooltip-unlocked");
             minTip.append("rect")
               .attr("x", 0)
               .attr("y", yScale(0)-tooltipHeight/2)
@@ -211,12 +227,15 @@ export class grapher {
               .attr("height", tooltipHeight)
               .attr("rx", tooltipHeight/4)
               .attr("ry", tooltipHeight/4);
+            tooltip.append("rect")
+              .attr("x", xTimeScale(d[0])-(tooltipWidth/2))
+              .attr("y", yScale(d[1])-(tooltipHeight+tooltipTailHeight))
+              .attr("width", tooltipWidth)
+              .attr("height", tooltipHeight)
+              .attr("rx", tooltipHeight/4)
+              .attr("ry", tooltipHeight/4);
             tooltip.append("polygon")
               .attr("points", xTimeScale(d[0])+","+(yScale(d[1])-(pointWidth/2))+" "+(xTimeScale(d[0])-5)+","+(yScale(d[1])-tooltipTailHeight-1)+" "+(xTimeScale(d[0])+5)+","+(yScale(d[1])-tooltipTailHeight-1))
-            tooltip.append("text")
-              .attr("x", xTimeScale(d[0])-(tooltipWidth/2)+tooltipPadding)
-              .attr("y", yScale(d[1])-(tooltipHeight+tooltipTailHeight)/2)
-              .text(d[2]+" "+d3.select(this.parentNode).attr("unit"));
             minTip.append("text")
               .attr("x", tooltipPadding)
               .attr("y", yScale(0)+tooltipPadding)
@@ -225,6 +244,10 @@ export class grapher {
               .attr("x", tooltipPadding)
               .attr("y", yScale(900)+tooltipPadding)
               .text(d3.select(this.parentNode).attr("refMax")+" "+d3.select(this.parentNode).attr("unit"));
+            tooltip.append("text")
+              .attr("x", xTimeScale(d[0])-(tooltipWidth/2)+tooltipPadding)
+              .attr("y", yScale(d[1])-(tooltipHeight+tooltipTailHeight)/2)
+              .text(d[2]+" "+d3.select(this.parentNode).attr("unit"));
             d3.selectAll(".value-tooltip").each(function(){
               var tt = d3.select(this);
               var tooltipLabel = tt.select("text");
@@ -265,6 +288,7 @@ export class grapher {
               tt.attr("class", ttclass.replace("tooltip-unlocked", "tooltip-locked"));
             }
           });
+          }
     }
     //legend finish
     var legendWidth = labelX-legendPadding;
