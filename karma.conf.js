@@ -52,8 +52,10 @@ module.exports = function(config) {
       { pattern: 'node_modules/@angular/**/*.js', included: false, watched: false },
       { pattern: 'node_modules/@angular/**/*.js.map', included: false, watched: false },
 
+      { pattern: 'node_modules/d3*/build/d3*.min.js', included: false, watched: false },
       { pattern: 'systemjs.config.js', included: false, watched: false },
       { pattern: 'systemjs.config.extras.js', included: false, watched: false },
+      'base/mock-data.json',
       'karma-test-shim.js',
 
       // transpiled application & spec code paths loaded via module imports
