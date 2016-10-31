@@ -10,8 +10,8 @@ import { By }           from '@angular/platform-browser';
 ////////  SPECS  /////////////
 
 describe('LineGraphComponent', function () {
-  var fixture: any;
-  var component: any;
+  let fixture: any;
+  let component: any;
   beforeEach((done: any) => {
     TestBed.configureTestingModule({declarations: [LineGraphComponent], providers: [DoseResponseDataService]});
     TestBed.overrideComponent(LineGraphComponent, {
@@ -22,7 +22,7 @@ describe('LineGraphComponent', function () {
       }
     });
     fixture = TestBed.createComponent(LineGraphComponent);
-    component = fixture.componentInstance
+    component = fixture.componentInstance;
     component.ngOnInit();
     setTimeout(function(){
       done();
@@ -43,14 +43,19 @@ describe('LineGraphComponent', function () {
     expect(axis).not.toBeNull();
   });
 
-  it("should have lines for each dataset", () => {
+  it('should have lines for each dataset', () => {
     let allIn = true;
-    for(var i=0; i<7; i++) {
-      if(d3.select(".series"+i+"-line").node()===null) {
+    for (let i = 0; i < 7; i++) {
+      if (d3.select('.series' + i + '-line').node() === null) {
         allIn = false;
       }
     }
     expect(allIn).toBe(true);
+  });
+
+  it('should have a title', () => {
+    let title = d3.select('h1');
+    expect(title.text).not.toBe('');
   });
 
 });

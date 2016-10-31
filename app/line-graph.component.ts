@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 @Component({
   selector: 'line-graph',
   providers: [DoseResponseDataService],
-  template: '<svg id="graph"></svg>'
+  template: '<h1></h1><svg id="graph"></svg>'
 })
 export class LineGraphComponent {
   public data: any;
@@ -18,10 +18,12 @@ export class LineGraphComponent {
 
   drawGraph() {
     this.drds.getData().subscribe(function(response: any) {
-      this.data = response.json();
-      var svg = d3.select("#graph");
+      let res = response.json();
+      this.data = res.data;
+      d3.select("h1").text(res.title);
+      let svg = d3.select("#graph");
       svg.selectAll("*").remove();
-      var g = new grapher();
+      let g = new grapher();
       g.lineGraph(svg, this.data);
     });
   }
