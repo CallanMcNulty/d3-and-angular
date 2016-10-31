@@ -14,6 +14,10 @@ export class LineGraphComponent {
 
   ngOnInit() {
     this.drawGraph();
+    let comp = this;
+    d3.select(window).on('resize', function() {
+      comp.drawGraph();
+    });
   }
 
   drawGraph() {

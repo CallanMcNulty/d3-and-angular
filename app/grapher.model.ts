@@ -153,10 +153,10 @@ export class Grapher {
           t = t.slice(0, t.indexOf(' ('));
           if (grapher.exclude.indexOf(t) === -1) {
             grapher.exclude.push(t);
-            localStorage.setItem('exclude', JSON.stringify(grapher.exclude));
           } else {
             grapher.exclude.splice(grapher.exclude.indexOf(t), 1);
           }
+          localStorage.setItem('exclude', JSON.stringify(grapher.exclude));
           svg.selectAll('*').remove();
           grapher.lineGraph(svg, rawData);
         });
