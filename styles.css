@@ -1,6 +1,8 @@
 .line-graph {
   max-width: 800px;
   height: 500px;
+  display: block;
+  margin: auto;
 }
 .line-graph h1 {
   font-family: arial;

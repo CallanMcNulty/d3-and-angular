@@ -2,15 +2,9 @@ import { browser, element, by } from 'protractor';
 
 describe('QuickStart E2E Tests', function () {
 
-  let expectedMsg = 'My First Angular App';
-
-
-  beforeEach(function () {
+  it('should get chart name from data service', function() {
     browser.get('');
-  });
-
-  it('should display: ' + expectedMsg, function () {
-    expect(element(by.css('h1')).getText()).toEqual(expectedMsg);
+    expect(element(by.css('h1')).getText()).toEqual('Diabetes Treatment Data');
   });
 
 });
